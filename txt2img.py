@@ -21,7 +21,7 @@ def _get_image_grids(images, rows, cols):
 
 
 class StableDiffusionTextImageGenerator:
-	def __init__(self, model_id='CompVis/stable-diffusion-v1-4', config={}):
+	def __init__(self, model_id='CompVis/stable-diffusion-v1-4'):
 		self.pipe = StableDiffusionTextImageGenerator._get_diffusion_pipe(model_id)
 
 	def get_image(self, description, num_images=1, num_rows=1):

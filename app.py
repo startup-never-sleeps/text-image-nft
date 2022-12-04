@@ -1,12 +1,19 @@
-class Txt2ImageApplication:
-	def __init__(self):
-		self.config = {'width':256, 'height':256, 'dim':'256x256', 'num_images':1, 'num_rows':1}
-
+import txt2img
+import os
+import json
 from simple_term_menu import TerminalMenu
+
+MODEL_TYPE = txt2img.ModelType.OpenAI
+MODEL_CONFIG = {"num_images":1, "num_rows":1}
+
+
 def run_app():
+	global MODEL_TYPE, MODEL_CONFIG	
+
+	main_menu_exit = False
 	main_menu = TerminalMenu(
-        menu_entries=["Choose model", "Change model config", "Generate images", "Quit"],
-        title="    Text->Image->NFT app Menu.\n    Press Q or Esc to quit.\n",
+        menu_entries=["Choose pre-trained model", "Change model config", "Generate images", "Quit"],
+        title="    Text->Image->NFT app\n",
         cycle_cursor=True,
         clear_screen=True,
     )
@@ -15,55 +22,43 @@ def run_app():
 		main_sel = main_menu.show()
 
 		if main_sel == 0:
-			model = input("""
+			model_type = input("""
 Choose pre-trained model for image generation:
 \t1. Stable Diffusion free model
 \t2. OpenAI model\n
-Make you choice: """)
+Current model is {}. Make you choice: """.format(MODEL_TYPE.name))
+			MODEL_TYPE = txt2img.ModelType(int(model_type))
+
 		elif main_sel == 1:
-			config = input("""
+			model_config = input("""
 Enter configuration for the generator as JSON.
 Example: {'num_images':1, 'num_rows':1}
-Current config: default_config
-Enter desired changes: """)
-			pairs = [pair.strip() for pair in config.split(',')]
-			print(pairs)
+Current config: %s. Enter desired changes: """ % json.dumps(MODEL_CONFIG))
+			model_config = json.loads(model_config)
+
+			for key in MODEL_CONFIG:
+				if key in model_config:
+					MODEL_CONFIG[key] = model_config[key]
+
+			input('Saved config is {}'.format(json.dumps(MODEL_CONFIG)))
+			
 		elif main_sel == 2:
-			generate_images_loop()
+			generate_images_loop(MODEL_TYPE, MODEL_CONFIG)
 		elif main_sel == 3 or main_sel == None:
 			main_menu_exit = True
 			print("Exiting the app - hope you enjoyed it!!!")
 
 
-from consolemenu import *
-from consolemenu.items import *
-def console_menu():
-	menu = ConsoleMenu("Text->Image->NFT app")
-
-	menu_item = MenuItem("Choose pre-trained model")
-	menu_item = MenuItem("Enter model configuration")
-
-	function_item = FunctionItem("Generate images", generate_images_loop)
-
-	menu.append_item(menu_item)
-	menu.append_item(menu_item)
-	menu.append_item(function_item)
-
-	menu.show()
-
-import txt2img
-import json
-import os
 # alternatives are consolemenu, simple-term-menu
-def generate_images_loop():
-	model = txt2img.GetGlobalModel()
+def generate_images_loop(typ=None, config={}):
+	model = txt2img.GetGlobalModel(typ)
 	
 	while True:
 		description = input("Enter your description or '__exit__' to exit: ")
 		if description == '__exit__': break
 
 		try:
-			image = model.get_image(description)
+			image = model.get_image(description, **config)
 			image.show()
 		except Exception as ex:
 			print(ex)
@@ -73,4 +68,4 @@ def generate_images_loop():
 
 # alternatives are consolemenu, simple-term-menu
 if __name__ == '__main__':
-	console_menu()
+	run_app()
