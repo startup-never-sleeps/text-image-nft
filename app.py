@@ -5,6 +5,7 @@ from simple_term_menu import TerminalMenu
 import uuid
 import base64
 
+
 MODEL_TYPE = txt2img.ModelType.OpenAI
 MODEL_CONFIG = {"num_images": 1, "num_rows": 1}
 
@@ -60,10 +61,10 @@ def generate_images_loop(typ=None, config={}):
     while True:
         try:
             description = input("""General commands:
-	1. __exit__ to exit
-	2. __save__ to save previous image
-	3. __upload__ to upload image to OpenSea
-	Enter your description to generate new image: """)
+1. __exit__ to exit
+2. __save__ to save previous image
+3. __upload__ to upload image to OpenSea
+Enter your description to generate new image: """)
             if description == '__exit__':
                 break
             elif description == '__save__':
