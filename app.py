@@ -1,13 +1,16 @@
-import txt2img
 import os
 import json
+import utils
+import traceback
+
 from simple_term_menu import TerminalMenu
-import uuid
-import base64
+import opensea
+import txt2img
 
 
 MODEL_TYPE = txt2img.ModelType.OpenAI
 MODEL_CONFIG = {"num_images": 1, "num_rows": 1}
+IMAGE_DIR = 'images'
 
 
 def run_app():
@@ -68,22 +71,32 @@ Enter your description to generate new image: """)
             if description == '__exit__':
                 break
             elif description == '__save__':
-                if not os.path.isdir('images'):
-                    os.makedirs('images')
-                filename = os.path.join(
-                    'images', 'image' + base64.b64encode(uuid.uuid4().bytes).decode('utf-8'))
-                image.save(filename, format=image.format)
-                input('Image saved to {}. Press any key to continue...'.format(filename))
+                _, image_path = utils.save_image(image, IMAGE_DIR)
+                input(
+                    'Image saved to {}. Press any key to continue...'.format(image_path))
             elif description == '__upload__':
-                # Upload image to OpenSea
-                pass
+                image_name, image_path = utils.save_image(image, IMAGE_DIR)
+                input(
+                    'Image saved to {}. Press any key to continue uploading...'.format(image_path))
+
+                opensea.upload_image(
+                    collection='python-generated-images',
+                    image_path=image_path,
+                    metadata=opensea.generate_image_metadata_dict(
+                        name=image_name,
+                        description=last_description
+                    )
+                )
             else:
                 image = model.get_image(description, **config)
+                image.description = description
                 image.show()
 
         except Exception as ex:
-            print(ex)
+            traceback.print_exc()
+            input('Exception received. Press any key to continue...')
 
+        last_description = description
         os.system('clear')
 
 
