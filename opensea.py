@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.command import Command
 
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -32,6 +33,7 @@ opensea = 'https://testnets.opensea.io'
 options = Options()
 options.add_argument("--disable-infobars")
 options.add_argument("--enable-file-cookies")
+options.add_argument("user-data-dir=selenium")
 options.add_experimental_option('excludeSwitches', ['enable-logging'])
 options.add_extension('./metamask-ext/extension_10_22_2_0.crx')
 
@@ -132,10 +134,18 @@ def generate_image_metadata_dict(name, description, attributes=[]):
 
 def upload_image(collection, image_path, metadata):
     global browser
-    if browser is None:
+    try:
+        browser.get(opensea + '/collection/' + collection + '/assets/create')
+    except Exception as ex:
+        # browser is None or is_driver_dead(browser) or
+        # not driver.service.assert_process_still_running() or
+        # user closed initial tabs
+        #
+        if browser:
+            browser.quit()
         browser = webdriver.Chrome(service=Service(
             ChromeDriverManager().install()), options=options)
-    browser.get(opensea + '/collection/' + collection + '/assets/create')
+        browser.get(opensea + '/collection/' + collection + '/assets/create')
 
     print("At this point you need to open a new tab and log into MetaMask to import your wallet."
           "Once you do that, go back to the OpenSea tab and connect MetaMask wallet to your account.")
